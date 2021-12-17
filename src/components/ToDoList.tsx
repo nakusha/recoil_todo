@@ -1,49 +1,54 @@
-import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import {
+  atom,
+  useRecoilState,
+  useRecoilValue,
+  useSetRecoilState,
+} from "recoil";
+
+const toDoStatus = atom<IToDo[]>({ key: "toDo", default: [] });
+interface IForm {
+  toDo: string;
+}
+
+interface IToDo {
+  text: string;
+  id: number;
+  category: "TO_DO" | "DOING" | "DONE";
+}
 
 const ToDoList = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setError,
-  } = useForm<IForm>({ defaultValues: { email: "@naver.com" } });
+  const [toDos, setToDos] = useRecoilState(toDoStatus);
 
-  const onValid = (data: IForm) => {
-    if (data.password !== data.password1) {
-      setError(
-        "password1",
-        { message: "Password is not equal" },
-        { shouldFocus: true }
-      );
-    }
-    setError("extraError", { message: "server offline" });
+  const { register, handleSubmit, setValue } = useForm<IForm>();
+
+  const onValid = ({ toDo }: IForm) => {
+    console.log("Add Data", toDo);
+    setToDos((oldToDos) => [
+      { text: toDo, id: Date.now(), category: "TO_DO" },
+      ...oldToDos,
+    ]);
+    setValue("toDo", "");
   };
-
-  interface IForm {
-    toDo: string;
-    email: string;
-    name: string;
-    schedule: string;
-    password: string;
-    password1: string;
-    extraError?: string;
-  }
 
   return (
     <div>
-      <form
-        onSubmit={handleSubmit(onValid)}
-        style={{ display: "flex", flexDirection: "column" }}
-      >
+      <h1>To dos</h1>
+      <form onSubmit={handleSubmit(onValid)}>
         <input
           {...register("toDo", {
             required: "Need Todo list",
-            minLength: { value: 5, message: "Too Short" },
           })}
           placeholder="Write a to do"
         />
-        <input
+        <button>Add</button>
+      </form>
+      <ul>
+        {toDos.map((toDo) => (
+          <li>{toDo.text}</li>
+        ))}
+      </ul>
+      {/* <input
           {...register("email", {
             required: "Need email input",
             minLength: { value: 5, message: "Too Short" },
@@ -93,10 +98,7 @@ const ToDoList = () => {
           })}
           placeholder="Write a to do"
         />
-        <span>{errors?.password1?.message}</span>
-        <button>Add</button>
-        <span>{errors?.extraError?.message}</span>
-      </form>
+        <span>{errors?.password1?.message}</span> */}
     </div>
   );
 };
